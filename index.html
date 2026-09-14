@@ -134,18 +134,6 @@
     font-size: 12px;
     outline: none;
   }
-  .reset-link {
-    display: block;
-    text-align: center;
-    margin-top: 24px;
-    font-size: 12px;
-    color: var(--text-muted);
-    background: none;
-    border: none;
-    text-decoration: underline;
-    cursor: pointer;
-    width: 100%;
-  }
   .status {
     text-align: center;
     font-size: 11px;
@@ -244,14 +232,15 @@ function render() {
   html += `<input class="title-input" id="titleInput" value="${escapeAttr(state.title)}" />`;
 
   state.boxes.forEach((box, i) => {
-    const boxPct = box.target > 0 ? Math.min(100, Math.round((box.done / box.target) * 100)) : 0;
+    const boxPctNum = box.target > 0 ? Math.min(100, (box.done / box.target) * 100) : 0;
+    const boxPct = boxPctNum.toFixed(2).replace('.', ',');
     html += `
     <div class="card">
       <div class="card-top">
         <input class="name-input" data-idx="${i}" data-field="name" value="${escapeAttr(box.name)}" />
         <span class="pct-badge">${boxPct}%</span>
       </div>
-      <div class="bar-track"><div class="bar-fill" style="width:${boxPct}%"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${boxPctNum}%"></div></div>
       <div class="target-row">
         Obiectiv total:
         <input type="number" min="1" data-idx="${i}" data-field="target" value="${box.target}" />
@@ -267,7 +256,6 @@ function render() {
     </div>`;
   });
 
-  html += `<button class="reset-link" id="resetBtn">Resetează tot progresul</button>`;
   html += `<div class="status" id="statusEl"></div>`;
 
   app.innerHTML = html;
@@ -315,12 +303,6 @@ function attachHandlers() {
       saveState();
       render();
     });
-  });
-
-  document.getElementById("resetBtn").addEventListener("click", () => {
-    state.boxes.forEach(b => b.done = 0);
-    saveState();
-    render();
   });
 }
 
