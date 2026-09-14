@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obiectivele mele</title>
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --card: #ffffff;
+    --border: #e2e0d8;
+    --text: #2c2c2a;
+    --text-muted: #706f6a;
+    --accent: #0f6e56;
+    --accent-light: #e1f5ee;
+    --accent-bar: #1d9e75;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 24px 16px 60px;
+    background: var(--bg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+  }
+  .wrap { width: 100%; max-width: 480px; }
+  .title-input {
+    width: 100%;
+    font-size: 24px;
+    font-weight: 600;
+    text-align: center;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    padding: 8px 4px 20px;
+    outline: none;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .name-input {
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    outline: none;
+    flex: 1;
+    min-width: 0;
+  }
+  .pct-badge {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    background: var(--accent-light);
+    padding: 3px 9px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .bar-track {
+    width: 100%;
+    height: 8px;
+    background: #eceae2;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    background: var(--accent-bar);
+    border-radius: 999px;
+    transition: width 0.25s ease;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .count-label { font-size: 13px; color: var(--text-muted); }
+  .count-label b { color: var(--text); font-size: 14px; }
+  .controls { display: flex; align-items: center; gap: 6px; }
+  .controls input[type=number] {
+    width: 56px;
+    height: 32px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-align: center;
+    font-size: 14px;
+    outline: none;
+  }
+  .controls input[type=number]:focus { border-color: var(--accent); }
+  button {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fafaf7;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+  }
+  button:active { transform: scale(0.97); }
+  .add-btn { background: var(--accent); color: #fff; border: none; }
+  .target-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+  .target-row input {
+    width: 48px;
+    height: 24px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    text-align: center;
+    font-size: 12px;
+    outline: none;
+  }
+  .reset-link {
+    display: block;
+    text-align: center;
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    text-decoration: underline;
+    cursor: pointer;
+    width: 100%;
+  }
+  .status {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    min-height: 14px;
+  }
+  .loading { text-align: center; color: var(--text-muted); padding: 40px 0; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="loading">Se încarcă...</div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+// ==== COMPLETEAZĂ AICI, dupa ce creezi proiectul Supabase ====
+const SUPABASE_URL = "https://enieqesganpvkbfrmmza.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_7eB_vs5sKmWgCWqkHr8WfA_vIHC9Uld";
+// ===============================================================
+
+const ROW_ID = "main";
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const defaultState = {
+  title: "Obiectivele mele",
+  boxes: [
+    { name: "Cod Penal", target: 10, done: 0 },
+    { name: "Cod Procedură penală", target: 10, done: 0 },
+    { name: "Cod Civil", target: 10, done: 0 },
+    { name: "Cod Procedură Civilă", target: 10, done: 0 },
+    { name: "Proiectul Torino", target: 10, done: 0 },
+    { name: "Progres Zilnic", target: 10, done: 0 }
+  ]
+};
+
+let state = null;
+let saveTimer = null;
+
+async function loadState() {
+  const { data, error } = await supabase
+    .from("tracker_state")
+    .select("data")
+    .eq("id", ROW_ID)
+    .maybeSingle();
+
+  if (error) {
+    console.error(error);
+    document.getElementById("app").innerHTML =
+      `<div class="loading">Eroare la conectare. Verifică SUPABASE_URL și SUPABASE_ANON_KEY din cod.</div>`;
+    return;
+  }
+
+  if (data && data.data) {
+    state = data.data;
+  } else {
+    state = structuredClone(defaultState);
+    await supabase.from("tracker_state").upsert({ id: ROW_ID, data: state });
+  }
+  render();
+}
+
+function saveState(statusText) {
+  clearTimeout(saveTimer);
+  showStatus(statusText || "Se salvează...");
+  saveTimer = setTimeout(async () => {
+    const { error } = await supabase
+      .from("tracker_state")
+      .upsert({ id: ROW_ID, data: state, updated_at: new Date().toISOString() });
+    showStatus(error ? "Eroare la salvare" : "Salvat");
+    if (!error) setTimeout(() => showStatus(""), 1500);
+  }, 400);
+}
+
+function showStatus(text) {
+  const el = document.getElementById("statusEl");
+  if (el) el.textContent = text;
+}
+
+function clampInt(v, min, fallback) {
+  const n = parseInt(v, 10);
+  if (isNaN(n) || n < min) return fallback;
+  return n;
+}
+
+function escapeAttr(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
+function render() {
+  const app = document.getElementById("app");
+  let html = "";
+  html += `<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;">Tracker de obiective sincronizat, cu casete individuale de progres</h2>`;
+  html += `<input class="title-input" id="titleInput" value="${escapeAttr(state.title)}" />`;
+
+  state.boxes.forEach((box, i) => {
+    const boxPct = box.target > 0 ? Math.min(100, Math.round((box.done / box.target) * 100)) : 0;
+    html += `
+    <div class="card">
+      <div class="card-top">
+        <input class="name-input" data-idx="${i}" data-field="name" value="${escapeAttr(box.name)}" />
+        <span class="pct-badge">${boxPct}%</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${boxPct}%"></div></div>
+      <div class="target-row">
+        Obiectiv total:
+        <input type="number" min="1" data-idx="${i}" data-field="target" value="${box.target}" />
+      </div>
+      <div class="row">
+        <div class="count-label">Realizat: <b>${box.done}</b> / ${box.target}</div>
+        <div class="controls">
+          <input type="number" min="1" value="1" id="addAmount${i}" />
+          <button class="add-btn" data-idx="${i}" data-action="add">Adaugă</button>
+          <button data-idx="${i}" data-action="reset-box">Reset</button>
+        </div>
+      </div>
+    </div>`;
+  });
+
+  html += `<button class="reset-link" id="resetBtn">Resetează tot progresul</button>`;
+  html += `<div class="status" id="statusEl"></div>`;
+
+  app.innerHTML = html;
+  attachHandlers();
+}
+
+function attachHandlers() {
+  document.getElementById("titleInput").addEventListener("change", (e) => {
+    state.title = e.target.value.trim() || "Obiectivele mele";
+    saveState();
+  });
+
+  document.querySelectorAll('[data-field="name"]').forEach(el => {
+    el.addEventListener("change", (e) => {
+      const idx = parseInt(e.target.dataset.idx, 10);
+      state.boxes[idx].name = e.target.value.trim() || `Casetă ${idx + 1}`;
+      saveState();
+    });
+  });
+
+  document.querySelectorAll('[data-field="target"]').forEach(el => {
+    el.addEventListener("change", (e) => {
+      const idx = parseInt(e.target.dataset.idx, 10);
+      state.boxes[idx].target = clampInt(e.target.value, 1, state.boxes[idx].target);
+      saveState();
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-action="add"]').forEach(el => {
+    el.addEventListener("click", (e) => {
+      const idx = parseInt(e.target.dataset.idx, 10);
+      const amountInput = document.getElementById(`addAmount${idx}`);
+      const amount = clampInt(amountInput.value, 1, 1);
+      state.boxes[idx].done = Math.max(0, state.boxes[idx].done + amount);
+      saveState();
+      render();
+    });
+  });
+
+  document.querySelectorAll('[data-action="reset-box"]').forEach(el => {
+    el.addEventListener("click", (e) => {
+      const idx = parseInt(e.target.dataset.idx, 10);
+      state.boxes[idx].done = 0;
+      saveState();
+      render();
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    state.boxes.forEach(b => b.done = 0);
+    saveState();
+    render();
+  });
+}
+
+loadState();
+</script>
+</body>
+</html>
